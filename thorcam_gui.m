@@ -205,11 +205,13 @@ uicontrol(bgAcq,'Style','radiobutton','String','trigered',...
 
 
     function startCamCB(~,~)
-
+        start(timerLive);
+        hbstart.Enable='off';
     end
 
     function stopCamCB(~,~)
-
+        stop(timerLive);
+        hbstart.Enable='on';
     end
 
     function clearBuffer(~,~)
@@ -276,7 +278,7 @@ hp.Position(3:4) = [hF.Position(3)-hp.Position(1) hF.Position(4)-h];
 axImg=axes('parent',hp,'UserData','OD');cla
 hImg=imagesc(X,Y,Z);
 set(axImg,'box','on','linewidth',.1,'fontsize',10,'units','normalized',...
-    'XAxisLocation','top','colormap',colormap(whitejet));
+    'XAxisLocation','top');
 hold on
 % axImg.Position=[50 150 hp.Position(3)-200 hp.Position(4)-200];
 axis equal tight
