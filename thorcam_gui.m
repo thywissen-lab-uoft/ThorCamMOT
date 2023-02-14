@@ -154,6 +154,7 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
             hbstart.Enable='on';
             hbstop.Enable='off';
             hbclear.Enable='on';
+            tbl_acq.Enable = 'on';
         catch ME
             warning(ME.message);
         end
@@ -169,6 +170,7 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
             hbstart.Enable='off';
             hbstop.Enable='off';
             hbclear.Enable='off';
+            tbl_acq.Enable = 'off';
 
         catch ME
             warning(ME.message)
