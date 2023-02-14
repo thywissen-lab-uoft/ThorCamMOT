@@ -27,10 +27,7 @@ dll_dir = ['C:\Program Files\Thorlabs\Scientific Imaging\' ...
     'Scientific Camera Support\Scientific Camera Interfaces\MATLAB'];
 dll_file=[dll_dir filesep 'Thorlabs.TSI.TLCamera.dll'];
 
-if exist(dll_file,'file')
-    
-
-
+if exist(dll_file,'file') 
     cd(dll_dir);
 
     % Check is the DLL's exist
@@ -44,7 +41,6 @@ if exist(dll_file,'file')
     asmInfo=NET.addAssembly(dll_file);
     asmInfo.Classes;
     disp('Dot NET assembly loaded.');
-
 
     % Open the SDK
     fprintf('Opening the camera SDK...');
@@ -110,7 +106,7 @@ function sizeChFcn(src,evt)
 %     resizePlots;
 end
 hF.SizeChangedFcn=@sizeChFcn;
-[255 204 0]/255;
+
 %% Connection Panel
 hpC=uipanel(hF,'units','pixels','backgroundcolor','w',...
     'Position',[1 hF.Position(4)-h 88 h],'title','connect');
@@ -123,14 +119,17 @@ hbCams = uicontrol(hpC,'Style','popupmenu','String',{'no cameras'},...
     'units','pixels','fontsize',8);
 hbCams.Position = [2 50 80 20];
 
-
+% Connect button
 hbConnect=uicontrol(hpC,'style','pushbutton','string','connect','units','pixels',...
     'fontsize',8,'Position',[2 26 80 20],'backgroundcolor',[80 200 120]/255,...
     'Callback',@connectCB,'enable','off');
+
+% Disonnect button
 hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','pixels',...
     'fontsize',8,'Position',[2 4 80 20],'backgroundcolor',[255 102 120]/255,...
     'Callback',@disconnectCB,'enable','off');
 
+% Connect to current camera
     function connectCB(src,evt)
         try
             sn = hbCams.String{hbCams.Value};        
@@ -149,6 +148,7 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
         end
     end
 
+% Disconnect from current camera
     function disconnectCB(src,evt)
         try
             closeCamera(tlCamera);
@@ -164,7 +164,7 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
         end
     end
 
-
+% Refresh camera list
     function refreshCB(src,evt)
         try
             sns = getCameras;
@@ -173,6 +173,7 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
         catch ME
             warning(ME.message);
             sns = {'no cameras'};
+            hbCams.String = sns;
             hbConnect.Enable = 'off';
         end
     end
@@ -180,6 +181,7 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
 hpAcq=uipanel(hF,'units','pixels','backgroundcolor','w',...
     'Position',[hpC.Position(1)+hpC.Position(3) hF.Position(4)-h 280 h],'title','acquisition');
 
+% Start acquisitino button
 ttstr='Start the camera and image acquisition';
 hbstart=uicontrol(hpAcq,'style','pushbutton','string','start','units','pixels',...
     'fontsize',10,'Position',[2 74 40 20],'backgroundcolor',[80 200 120]/255,...
@@ -211,14 +213,14 @@ uicontrol(bgAcq,'Style','radiobutton','String','live',...
 uicontrol(bgAcq,'Style','radiobutton','String','trigered',...
     'Position',[0 0 100 20],'units','pixels','backgroundcolor','w');
 
-
+% Start camera callback
     function startCamCB(~,~)
         start(timerLive);
         hbstart.Enable='off';
         hbstop.Enable='on';
-
     end
 
+% Stop camera callback
     function stopCamCB(~,~)
         stop(timerLive);
         hbstart.Enable='on';
@@ -226,6 +228,7 @@ uicontrol(bgAcq,'Style','radiobutton','String','trigered',...
 
     end
 
+% Clear buffer calblack
     function clearBuffer(~,~)
 
     end
