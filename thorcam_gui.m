@@ -374,7 +374,7 @@ colormap(inferno);
 % Box for ROI (this will become an array later)
 % pROI=rectangle('position',[1 1 1392 1024],'edgecolor',co(1,:),'linewidth',2);
 
-cBar=colorbar('fontsize',8,'units','pixels','location','northoutside');
+cBar=colorbar('fontsize',8,'units','pixels','location','eastoutside');
 drawnow;
 
 
@@ -403,7 +403,7 @@ cdata=imresize(imread('images/fullLim.png'),[15 15]);
 hbFullLim=uicontrol(hp,'style','pushbutton','Cdata',cdata,'Fontsize',10,...
     'Backgroundcolor','w','Position',[1 1 21 20],'Callback',@fullDispCB,...
     'ToolTipString',ttstr);
-keyboard
+
 ttstr='Snap display ROI to data ROI(s).';
 cdata=imresize(imread('images/snapLim.png'),[15 15]);
 hbSnapLim=uicontrol(hp,'style','pushbutton','Cdata',cdata,'Fontsize',10,...
