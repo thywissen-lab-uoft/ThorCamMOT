@@ -75,7 +75,7 @@ timerLive=timer('Name','liveupdate','executionmode','fixedspacing',...
     'period',0.001,'TimerFcn',@liveCB);
 % Callback function for live update
     function liveCB(~,~)
-        cam.IssueSoftwareTrigger;        
+        tlCamera.IssueSoftwareTrigger;        
         pause(0.02);
         updateImage;
     end
@@ -141,6 +141,9 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
             tlCamera=openCamera(sn,camera_settings);
             hbDisconnect.Enable='on';
             hbConnect.Enable='off';
+            hbstart.Enable='on';
+            hbstop.Enable='off';
+            hbclear.Enable='on';
         catch ME
             warning(ME.message);
         end
@@ -151,6 +154,11 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
             closeCamera(tlCamera);
             hbDisconnect.Enable='off';
             hbConnect.Enable='on';
+
+            hbstart.Enable='off';
+            hbstop.Enable='off';
+            hbclear.Enable='off';
+
         catch ME
             warning(ME.message)
         end
@@ -207,11 +215,15 @@ uicontrol(bgAcq,'Style','radiobutton','String','trigered',...
     function startCamCB(~,~)
         start(timerLive);
         hbstart.Enable='off';
+        hbstop.Enable='on';
+
     end
 
     function stopCamCB(~,~)
         stop(timerLive);
         hbstart.Enable='on';
+        hbstop.Enable='off';
+
     end
 
     function clearBuffer(~,~)
@@ -417,16 +429,14 @@ tbl_dispROI.Position(1:2)=[66 1];
 % Grab the image camera if available
 function img=grabImage
     img=[];
-    imageFrame = tlCameraSDK.GetPendingFrameOrNull;
+    imageFrame = tlCamera.GetPendingFrameOrNull;
     if ~isempty(imageFrame)
         imageData = imageFrame.ImageData.ImageData_monoOrBGR;
         imageHeight = imageFrame.ImageData.Height_pixels;
         imageWidth = imageFrame.ImageData.Width_pixels;   
         img = reshape(uint16(imageData), [imageWidth, imageHeight]);  
         img = img';
-        if isequal(sn,'10148')
-            img = imrotate(img,180);       
-        end
+   
         img=double(img);
     end
 end
