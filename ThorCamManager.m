@@ -38,9 +38,10 @@ function ThorCamManager
 % 10148 - Y CAMERA
 
 % List of all camera objects
-allCams={}
+allCams={};
 
-
+curpath = fileparts(mfilename('fullpath'));
+addpath(curpath);addpath(genpath(curpath));
 %% Load Libraries to run the camera
 
 % Load TLCamera DotNet assembly.
@@ -70,7 +71,6 @@ disp('loaded.');
 
 disp('attempting to find cameras')
 try
-    %tlCamera = tlCameraSDK.OpenCamera(10118, false)
     serialNumbers = tlCameraSDK.DiscoverAvailableCameras
 catch ME
     disp(ME);
@@ -79,6 +79,9 @@ catch ME
     return;
 end
 disp('done')
+
+cd(curpath);
+
 
 %% Graphical interface
 
