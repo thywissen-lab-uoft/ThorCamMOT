@@ -145,16 +145,14 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
             end
             tlCamera=openCamera(sn,camera_settings);
             
-            camera_settings.ExposureTime = tlCamera.ExposureTime_us;
-            camera_settings.Gain = tlCamera.Gain;                                      
-            camera_settings.Gain_dB=tlCamera.ConvertGainToDecibels(tlCamera.Gain);                   
-            
+            tblUpdate;
             hbDisconnect.Enable='on';
             hbConnect.Enable='off';
             hbstart.Enable='on';
             hbstop.Enable='off';
             hbclear.Enable='on';
             tbl_acq.Enable = 'on';
+
         catch ME
             warning(ME.message);
         end
@@ -259,6 +257,7 @@ tbl_acq.Position(1:2)=[110 10];
 
  function chSet(tbl,data)
         r=data.Indices(1);
+        c=data.Indices(2);
         val=data.NewData;            
         % Gain goes for 0 to 48 dB
         % Exposure goes from 64us to 51925252us
@@ -271,24 +270,31 @@ tbl_acq.Position(1:2)=[110 10];
                     gVal=tlCamera.ConvertDecibelsToGain(val);
                     tlCamera.Gain=gVal;                        
                     gGain=tlCamera.ConvertGainToDecibels(tlCamera.Gain);
-                    tbl.Data(data.Indices)=gGain;                        
+                    tbl.Data{r,c}=gGain;                        
                 else
-                    tbl.Data(data.Indices)=data.PreviousData;                        
+                    warning('Valid gain is 0 dB to 48 dB')
+                    tbl.Data{r,c}=data.PreviousData;                        
                 end            
             case 3
                 if val>=64 && val<=1E5
                     val=round(val);
                     disp(['Changing exposure to ' num2str(val) ' us']);
                     tlCamera.ExposureTime_us=uint32(val);
-                    tbl.Data(r)=double(tlCamera.ExposureTime_us);
+                    tbl.Data{r,c}=double(tlCamera.ExposureTime_us);
                 else
-                    tbl.Data(r)=data.PreviousData;                        
+                    tbl.Data{r,c}=data.PreviousData;    
+                    warning('Valid expsure is 64u to 1e5us');
                 end
-        end    
+        end   
+
         tblUpdate;
  end
 
     function tblUpdate
+        camera_settings.Gain = tlCamera.Gain;
+        camera_settings.Gain_dB=tlCamera.ConvertGainToDecibels(...
+            tlCamera.Gain);
+        camera_settings.ExposureTime=tlCamera.ExposureTime_us;
         tbl_acq.Data{1,2} = camera_settings.Gain_dB;
         tbl_acq.Data{2,2} = camera_settings.Gain;
         tbl_acq.Data{3,2} = camera_settings.ExposureTime;
@@ -300,15 +306,15 @@ hpOptics=uipanel('parent',hF,'units','pixels','backgroundcolor','w',...
     'title','optics');
 hpOptics.Position=[hpAcq.Position(1)+hpAcq.Position(3) hF.Position(4)-h 160 h]; 
 
-tbl_acq=uitable('parent',hpOptics,'units','pixels','RowName',{},'ColumnName',{},...
+tbl_optics=uitable('parent',hpOptics,'units','pixels','RowName',{},'ColumnName',{},...
     'fontsize',8,'ColumnWidth',{90,40},'columneditable',[false true]);
-tbl_acq.Data={...
+tbl_optics.Data={...
     'Magnification', camera_settings.Magnification;
     'Pixel Size (um)',camera_settings.PixelSize;
     'QE',camera_settings.QuantumEfficiency;
     'Solid Angle (ster)',camera_settings.SolidAngle};
-tbl_acq.Position(3:4) = tbl_acq.Extent(3:4);
-tbl_acq.Position(1:2)=[5 10];
+tbl_optics.Position(3:4) = tbl_optics.Extent(3:4);
+tbl_optics.Position(1:2)=[5 10];
 %% Image Process
 
 hpImgProcess=uipanel('parent',hF,'units','pixels','backgroundcolor','w',...
