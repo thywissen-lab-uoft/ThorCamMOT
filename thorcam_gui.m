@@ -327,12 +327,10 @@ tImgDesc=text(4,4,'test','units','pixels','verticalalignment','bottom',...
     'color','r','fontweight','bold','fontsize',12);
 
     function updateDescStr(counts)
-        
-        
        str = [num2str(camera_settings.Gain) ' dB ' ...
            num2str(camera_settings.ExposureTime)  ' \mus'];
        if nargin == 1
-           str = [newline sprintf('%.4e',counts)];
+           str = [str newline sprintf('%.4e',counts)];
        end
        tImgDesc.String =str;
     end
