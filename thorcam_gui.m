@@ -60,6 +60,9 @@ camera_settings.ExposureTime = 64;
 camera_settings.Gain = 30;
 camera_settings.PixelSize = 3.7; % size in um
 camera_settings.TriggerMode = 1;
+camera_settings.QuantumEfficiency = 0.25; % size in um
+camera_settings.Magnification = 1;
+camera_settings.SolidAngle = .2;
 
 X=1:1392;                       % X pixel vector
 Y=1:1024;                       % Y pixel vector
@@ -98,6 +101,7 @@ end
 function sizeChFcn(src,evt)
     hpC.Position(2) = hF.Position(4)-hpC.Position(4);
     hpAcq.Position(2) = hpC.Position(2);
+    hpOptics.Position(2) = hpC.Position(2);
     hpImgProcess.Position(2) = hpC.Position(2);
     hpRaw.Position(2) = hpC.Position(2);
     hpAnl.Position(2) = hpC.Position(2);
@@ -236,17 +240,31 @@ uicontrol(bgAcq,'Style','radiobutton','String','trigered',...
 tbl_acq=uitable('parent',hpAcq,'units','pixels','RowName',{},'ColumnName',{},...
     'fontsize',8,'ColumnWidth',{100,40},'columneditable',[false true]);
 tbl_acq.Data={...
-    ['raw pixelsize (' char(956) 'm)'], camera_settings.PixelSize;
-    'magnification','??';
-    'gain (dB)', camera_settings.Gain,
+    'gain (dB)', camera_settings.Gain;
     'exposure time (us)',camera_settings.ExposureTime};
-tbl_acq.Position(3:4)=tbl_acq.Extent(3:4);
+tbl_acq.Position(3:4) = tbl_acq.Extent(3:4);
 tbl_acq.Position(1:2)=[110 10];
+
+%% Optics
+
+hpOptics=uipanel('parent',hF,'units','pixels','backgroundcolor','w',...
+    'title','optics');
+hpOptics.Position=[hpAcq.Position(1)+hpAcq.Position(3) hF.Position(4)-h 160 h]; 
+
+tbl_acq=uitable('parent',hpOptics,'units','pixels','RowName',{},'ColumnName',{},...
+    'fontsize',8,'ColumnWidth',{90,40},'columneditable',[false true]);
+tbl_acq.Data={...
+    'Magnification', camera_settings.Magnification;
+    'Pixel Size (um)',camera_settings.PixelSize;
+    'QE',camera_settings.QuantumEfficiency;
+    'Solid Angle (ster)',camera_settings.SolidAngle};
+tbl_acq.Position(3:4) = tbl_acq.Extent(3:4);
+tbl_acq.Position(1:2)=[5 10];
 %% Image Process
 
 hpImgProcess=uipanel('parent',hF,'units','pixels','backgroundcolor','w',...
     'title','processing');
-hpImgProcess.Position=[hpAcq.Position(1)+hpAcq.Position(3) hF.Position(4)-h 200 h]; 
+hpImgProcess.Position=[hpOptics.Position(1)+hpOptics.Position(3) hF.Position(4)-h 200 h]; 
 
 
 %% Image Process
