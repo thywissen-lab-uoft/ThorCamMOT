@@ -69,7 +69,142 @@ X=1:1392;                       % X pixel vector
 Y=1:1024;                       % Y pixel vector
 Z=zeros(length(Y),length(X));   % Image to show
 
+%% Timer Objects
 
+timerLive=timer('Name','liveupdate','executionmode','fixedspacing',...
+    'period',0.001,'TimerFcn',@liveCB);
+% Callback function for live update
+    function liveCB(~,~)
+        cam.IssueSoftwareTrigger;        
+        pause(0.02);
+        updateImage;
+    end
+
+
+% Grab the image camera if available
+    function img=grabImage
+        img=[];
+        imageFrame = cam.GetPendingFrameOrNull;
+        if ~isempty(imageFrame)
+            imageData = imageFrame.ImageData.ImageData_monoOrBGR;
+            imageHeight = imageFrame.ImageData.Height_pixels;
+            imageWidth = imageFrame.ImageData.Width_pixels;   
+            img = reshape(uint16(imageData), [imageWidth, imageHeight]);  
+            img = img';
+            if isequal(sn,'10148')
+                img = imrotate(img,180);       
+            end
+            img=double(img);
+        end
+        
+        if doDebug && isequal(cameraMode,'Live')
+           a=datevec(now);
+           a=a(6);           
+           t=mod(a,8);
+           N0=800*(1+rand*.05)*(1-exp(-t/2));  
+           xC=mean(xVec)+rand*10;
+           yC=mean(yVec)+rand*10;     
+           yS=100*(1+rand*.2);
+           xS=200*(1+rand*.2);
+           [xx,yy]=meshgrid(xVec,yVec);           
+           foo=@(x,y) N0*exp(-(x-xC).^2/(2*xS^2)).*exp(-(y-yC).^2/(2*yS^2));
+           data=foo(xx,yy);          
+           noise=50*rand(length(yVec),length(xVec));           
+           img=data+noise;             
+        end
+          
+        if doDebug && isequal(cameraMode,'Triggered')
+            N0=400*(1+rand*.05);  
+            xC=mean(xVec)+rand*10;
+            yC=mean(yVec)+rand*10;     
+            yS=100*(1+rand*.05);
+            xS=200*(1+rand*.05);
+            [xx,yy]=meshgrid(xVec,yVec);           
+            foo=@(x,y) N0*exp(-(x-xC).^2/(2*xS^2)).*exp(-(y-yC).^2/(2*yS^2));
+            data=foo(xx,yy);          
+            noise=300*rand(length(yVec),length(xVec));  
+            switch trig.Mode
+                case 0
+                    img=data;
+                case 1
+                    if trig.NumImages==0
+                       img=noise;
+                    else
+                        img=data+noise;
+                    end
+                case 2
+                    if trig.NumImages==0
+                       img=data+noise;
+                    else
+                        img=noise;
+                    end                    
+            end      
+        end
+    end
+
+  function updateImage   
+        % Grab the image
+        img=grabImage;
+        
+        % Exit if no image to be had
+        if isempty(img)
+            return
+        end
+           
+        % Subtract the background image
+        if live.BackgroundSubtract
+            hImg.CData=img-imgBG;
+        else  
+            hImg.CData=img;  
+        end        
+        c=sum(sum(img));  
+        textCounts.String=sprintf('%.4e',c);             
+
+        if live.Fit
+            if live.BackgroundSubtract
+                data=img-imgBG;
+            else
+                data=img;
+            end
+            
+           fout=gaussfit2D(xVec,yVec,data);
+           cvals=coeffvalues(fout);
+           cvals(2:5)=cvals(2:5);
+           textFit.String=['cen : (' num2str(round(cvals(2))) ',' ...
+               num2str(round(cvals(4))) '), \sigma : (' ...
+               num2str(round(cvals(3))) ',' num2str(round(cvals(5))) ')'];
+           tVec=linspace(0,2*pi,200);                   
+           xvec=cvals(2)+2*cvals(3)*cos(tVec);
+           yvec=cvals(4)+2*cvals(5)*sin(tVec);                   
+           set(pRet,'XData',xvec,'YData',yvec);      
+        end
+
+        t=(now-t0)*24*60*60;
+        c=sum(sum(img));                
+        T(end+1)=t;Y(end+1)=c;   
+        cBG=sum(sum(img(ROIbg)));
+        cBGs(end+1)=cBG;
+
+        if length(T)>3E4
+            T=[];
+            Y=[];
+            cBGs=[];
+        end
+
+        if live.AutoBackground                            
+            if cBG>.5*max(cBGs) && c<sum(sum(imgBG))
+                figure(12)
+                clf
+                imgBG=img;                        
+                imagesc(imgBG);
+            end
+        end               
+
+        try
+            set(pp,'XData',T,'YData',Y);
+        end
+     
+    end
 %% Graphics Options
 h = 110;
 
