@@ -58,6 +58,8 @@ tlCamera = [];
 camera_settings = struct;
 camera_settings.ExposureTime = 64;
 camera_settings.Gain_dB = 30;
+camera_settings.Gain = 0;
+
 camera_settings.PixelSize = 3.7; % size in um
 camera_settings.TriggerMode = 1;
 camera_settings.QuantumEfficiency = 0.25; % size in um
@@ -142,6 +144,11 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
                 return;
             end
             tlCamera=openCamera(sn,camera_settings);
+            
+            camera_settings.ExposureTime = tlCamera.ExposureTime_us;
+            camera_settings.Gain = tlCamera.Gain;                                      
+            camera_settings.Gain_dB=tlCamera.ConvertGainToDecibels(tlCamera.Gain);                   
+            
             hbDisconnect.Enable='on';
             hbConnect.Enable='off';
             hbstart.Enable='on';
@@ -239,13 +246,14 @@ uicontrol(bgAcq,'Style','radiobutton','String','trigered',...
 
 tbl_acq=uitable('parent',hpAcq,'units','pixels','RowName',{},'ColumnName',{},...
     'fontsize',8,'ColumnWidth',{100,40},'columneditable',[false true],...
-    'celleditcallback',@chSet);
+    'celleditcallback',@chSet,'Enable','off');
 tbl_acq.Data={...
     'gain (dB)', camera_settings.Gain_dB;
     'gain', camera_settings.Gain;
     'exposure time (us)',camera_settings.ExposureTime};
 tbl_acq.Position(3:4) = tbl_acq.Extent(3:4);
 tbl_acq.Position(1:2)=[110 10];
+
 
  function chSet(tbl,data)
         r=data.Indices(1);
@@ -271,12 +279,18 @@ tbl_acq.Position(1:2)=[110 10];
                     disp(['Changing exposure to ' num2str(val) ' us']);
                     tlCamera.ExposureTime_us=uint32(val);
                     tbl.Data(r)=double(tlCamera.ExposureTime_us);
-                    tExp=tbl.Data(r);
-                    textExp.String=[num2str(tExp) ' \mus'];                        
                 else
                     tbl.Data(r)=data.PreviousData;                        
                 end
-        end          
+        end    
+        tblUpdate;
+ end
+
+    function tblUpdate
+        tbl_acq.Data{1,2} = camera_settings.Gain_dB;
+        tbl_acq.Data{2,2} = camera_settings.Gain;
+        tbl_acq.Data{3,2} = camera_settings.ExposureTime;
+        updateDescStr;
     end
 %% Optics
 
@@ -368,7 +382,10 @@ tImgDesc=text(4,4,'test','units','pixels','verticalalignment','bottom',...
        tImgDesc.String =str;
     end
 
+tblUpdate
 updateDescStr
+
+
 
 %%
 
@@ -579,7 +596,7 @@ end
         % The default black level should be zero
         tlCamera.BlackLevel=uint32(0);       
         % Set the default gain level to zero
-        tlCamera.Gain=tlCamera.ConvertDecibelsToGain(uint32(settings.Gain));                
+        tlCamera.Gain=tlCamera.ConvertDecibelsToGain(uint32(settings.Gain_dB));                
         % Set operation mode to software testing
         tlCamera.OperationMode = ...
             Thorlabs.TSI.TLCameraInterfaces.OperationMode.SoftwareTriggered;    
