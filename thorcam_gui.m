@@ -57,7 +57,7 @@ tlCamera = [];
 
 camera_settings = struct;
 camera_settings.ExposureTime = 64;
-camera_settings.Gain = 30;
+camera_settings.Gain_dB = 30;
 camera_settings.PixelSize = 3.7; % size in um
 camera_settings.TriggerMode = 1;
 camera_settings.QuantumEfficiency = 0.25; % size in um
@@ -238,13 +238,46 @@ uicontrol(bgAcq,'Style','radiobutton','String','trigered',...
     end
 
 tbl_acq=uitable('parent',hpAcq,'units','pixels','RowName',{},'ColumnName',{},...
-    'fontsize',8,'ColumnWidth',{100,40},'columneditable',[false true]);
+    'fontsize',8,'ColumnWidth',{100,40},'columneditable',[false true],...
+    'celleditcallback',@chSet);
 tbl_acq.Data={...
-    'gain (dB)', camera_settings.Gain;
+    'gain (dB)', camera_settings.Gain_dB;
+    'gain', camera_settings.Gain;
     'exposure time (us)',camera_settings.ExposureTime};
 tbl_acq.Position(3:4) = tbl_acq.Extent(3:4);
 tbl_acq.Position(1:2)=[110 10];
 
+ function chSet(tbl,data)
+        r=data.Indices(1);
+        val=data.NewData;            
+        % Gain goes for 0 to 48 dB
+        % Exposure goes from 64us to 51925252us
+
+        switch r
+            case 1                    
+                if val>=0 && val<=48
+                    val=round(val,1);
+                    disp(['Changing gain to ' num2str(val) ' dB']);
+                    gVal=tlCamera.ConvertDecibelsToGain(val);
+                    tlCamera.Gain=gVal;                        
+                    gGain=tlCamera.ConvertGainToDecibels(tlCamera.Gain);
+                    tbl.Data(data.Indices)=gGain;                        
+                else
+                    tbl.Data(data.Indices)=data.PreviousData;                        
+                end            
+            case 3
+                if val>=64 && val<=1E5
+                    val=round(val);
+                    disp(['Changing exposure to ' num2str(val) ' us']);
+                    tlCamera.ExposureTime_us=uint32(val);
+                    tbl.Data(r)=double(tlCamera.ExposureTime_us);
+                    tExp=tbl.Data(r);
+                    textExp.String=[num2str(tExp) ' \mus'];                        
+                else
+                    tbl.Data(r)=data.PreviousData;                        
+                end
+        end          
+    end
 %% Optics
 
 hpOptics=uipanel('parent',hF,'units','pixels','backgroundcolor','w',...
@@ -327,7 +360,7 @@ tImgDesc=text(4,4,'test','units','pixels','verticalalignment','bottom',...
     'color','r','fontweight','bold','fontsize',12);
 
     function updateDescStr(counts)
-       str = [num2str(camera_settings.Gain) ' dB ' ...
+       str = [num2str(camera_settings.Gain_dB) ' dB ' ...
            num2str(camera_settings.ExposureTime)  ' \mus'];
        if nargin == 1
            str = [str newline sprintf('%.4e',counts)];
