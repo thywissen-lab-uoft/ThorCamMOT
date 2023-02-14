@@ -56,8 +56,8 @@ end
 tlCamera = [];
 
 camera_settings = struct;
-camera_settings.ExposureTime = 64;
-camera_settings.Gain_dB = 30;
+camera_settings.ExposureTime = 1000;
+camera_settings.Gain_dB = 10;
 camera_settings.Gain = 0;
 
 camera_settings.PixelSize = 3.7; % size in um
@@ -77,7 +77,7 @@ timerLive=timer('Name','liveupdate','executionmode','fixedspacing',...
 % Callback function for live update
     function liveCB(~,~)
         tlCamera.IssueSoftwareTrigger;        
-        pause(0.05);
+        pause(0.02);
         updateImage;
     end
 
@@ -526,7 +526,7 @@ climtext.Position(1:2)= [1 25];
 
 % Color limit table for OD image
 climtbl=uitable('parent',hp,'units','pixels','RowName',{},'ColumnName',{},...
-    'Data',[0 1],'ColumnWidth',{40,40},'ColumnEditable',[true true],...
+    'Data',[0 1000],'ColumnWidth',{40,40},'ColumnEditable',[true true],...
     'CellEditCallback',@climCB);
 climtbl.Position(3:4)=climtbl.Extent(3:4);
 climtbl.Position(1:2) = [30 25];
@@ -554,10 +554,9 @@ function img=grabImage
         imageData = imageFrame.ImageData.ImageData_monoOrBGR;
         imageHeight = imageFrame.ImageData.Height_pixels;
         imageWidth = imageFrame.ImageData.Width_pixels;   
-        img = reshape(uint16(imageData), [imageWidth, imageHeight]);  
-        img = img';
-   
-        img=double(img);
+        img = reshape(uint16(imageData), [imageWidth, imageHeight]); 
+        img = img';   
+        %img=double(img);        
     end
 end
 
@@ -568,11 +567,9 @@ function updateImage
     % Exit if no image to be had
     if isempty(img)
         return
-    end
-    hImg.CData = img;    
-    
-    updateDescStr(sum(sum(img)));
-    
+    end    
+    hImg.CData = img;        
+    updateDescStr(sum(sum(img)));    
 end
 
 %Get cameras
