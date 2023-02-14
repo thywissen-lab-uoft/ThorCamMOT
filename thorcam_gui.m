@@ -61,7 +61,7 @@ tlCamera = [];
 
 camera_settings = struct;
 camera_settings.ExposureTime = 64;
-camera_settings.Gain = 52;
+camera_settings.Gain = 30;
 camera_settings.PixelSize = 3.7; % size in um
 camera_settings.TriggerMode = 1;
 
@@ -76,7 +76,7 @@ timerLive=timer('Name','liveupdate','executionmode','fixedspacing',...
 % Callback function for live update
     function liveCB(~,~)
         tlCamera.IssueSoftwareTrigger;        
-        pause(0.02);
+        pause(0.05);
         updateImage;
     end
 
