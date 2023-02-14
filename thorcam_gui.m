@@ -80,131 +80,6 @@ timerLive=timer('Name','liveupdate','executionmode','fixedspacing',...
         updateImage;
     end
 
-
-% Grab the image camera if available
-    function img=grabImage
-        img=[];
-        imageFrame = cam.GetPendingFrameOrNull;
-        if ~isempty(imageFrame)
-            imageData = imageFrame.ImageData.ImageData_monoOrBGR;
-            imageHeight = imageFrame.ImageData.Height_pixels;
-            imageWidth = imageFrame.ImageData.Width_pixels;   
-            img = reshape(uint16(imageData), [imageWidth, imageHeight]);  
-            img = img';
-            if isequal(sn,'10148')
-                img = imrotate(img,180);       
-            end
-            img=double(img);
-        end
-        
-        if doDebug && isequal(cameraMode,'Live')
-           a=datevec(now);
-           a=a(6);           
-           t=mod(a,8);
-           N0=800*(1+rand*.05)*(1-exp(-t/2));  
-           xC=mean(xVec)+rand*10;
-           yC=mean(yVec)+rand*10;     
-           yS=100*(1+rand*.2);
-           xS=200*(1+rand*.2);
-           [xx,yy]=meshgrid(xVec,yVec);           
-           foo=@(x,y) N0*exp(-(x-xC).^2/(2*xS^2)).*exp(-(y-yC).^2/(2*yS^2));
-           data=foo(xx,yy);          
-           noise=50*rand(length(yVec),length(xVec));           
-           img=data+noise;             
-        end
-          
-        if doDebug && isequal(cameraMode,'Triggered')
-            N0=400*(1+rand*.05);  
-            xC=mean(xVec)+rand*10;
-            yC=mean(yVec)+rand*10;     
-            yS=100*(1+rand*.05);
-            xS=200*(1+rand*.05);
-            [xx,yy]=meshgrid(xVec,yVec);           
-            foo=@(x,y) N0*exp(-(x-xC).^2/(2*xS^2)).*exp(-(y-yC).^2/(2*yS^2));
-            data=foo(xx,yy);          
-            noise=300*rand(length(yVec),length(xVec));  
-            switch trig.Mode
-                case 0
-                    img=data;
-                case 1
-                    if trig.NumImages==0
-                       img=noise;
-                    else
-                        img=data+noise;
-                    end
-                case 2
-                    if trig.NumImages==0
-                       img=data+noise;
-                    else
-                        img=noise;
-                    end                    
-            end      
-        end
-    end
-
-  function updateImage   
-        % Grab the image
-        img=grabImage;
-        
-        % Exit if no image to be had
-        if isempty(img)
-            return
-        end
-           
-        % Subtract the background image
-        if live.BackgroundSubtract
-            hImg.CData=img-imgBG;
-        else  
-            hImg.CData=img;  
-        end        
-        c=sum(sum(img));  
-        textCounts.String=sprintf('%.4e',c);             
-
-        if live.Fit
-            if live.BackgroundSubtract
-                data=img-imgBG;
-            else
-                data=img;
-            end
-            
-           fout=gaussfit2D(xVec,yVec,data);
-           cvals=coeffvalues(fout);
-           cvals(2:5)=cvals(2:5);
-           textFit.String=['cen : (' num2str(round(cvals(2))) ',' ...
-               num2str(round(cvals(4))) '), \sigma : (' ...
-               num2str(round(cvals(3))) ',' num2str(round(cvals(5))) ')'];
-           tVec=linspace(0,2*pi,200);                   
-           xvec=cvals(2)+2*cvals(3)*cos(tVec);
-           yvec=cvals(4)+2*cvals(5)*sin(tVec);                   
-           set(pRet,'XData',xvec,'YData',yvec);      
-        end
-
-        t=(now-t0)*24*60*60;
-        c=sum(sum(img));                
-        T(end+1)=t;Y(end+1)=c;   
-        cBG=sum(sum(img(ROIbg)));
-        cBGs(end+1)=cBG;
-
-        if length(T)>3E4
-            T=[];
-            Y=[];
-            cBGs=[];
-        end
-
-        if live.AutoBackground                            
-            if cBG>.5*max(cBGs) && c<sum(sum(imgBG))
-                figure(12)
-                clf
-                imgBG=img;                        
-                imagesc(imgBG);
-            end
-        end               
-
-        try
-            set(pp,'XData',T,'YData',Y);
-        end
-     
-    end
 %% Graphics Options
 h = 110;
 
@@ -411,45 +286,6 @@ colormap(inferno);
 
 cBar=colorbar('fontsize',8,'units','pixels','location','northoutside');
 drawnow;
-% 
-% function resizePlots       
-%         % Resize the image axis     
-%         
-%         if (hp.Position(3)<250 || hp.Position(4)<250)            
-%             return;
-%         end
-%         
-%         axImg.Position=[40 110 hp.Position(3)-200 hp.Position(4)-200];        
-%         
-%         % Get the aspect ratio of plot objects
-%         Rimg=axImg.PlotBoxAspectRatio;Rimg=Rimg(1)/Rimg(2);
-%         Rax=axImg.Position(3:4);Rax=Rax(1)/Rax(2);
-%         
-%         % Size of plot objects (position is weird in axis equal tight);
-%         if Rax>Rimg
-%             h1=axImg.Position(4);
-%             w1=axImg.Position(4)*Rimg;   
-% %             hAxX.Position=[40+(axImg.Position(3)-w1)/2 axImg.Position(2)-l w1 80];
-% %             hAxY.Position=[40+(axImg.Position(3)+w1)/2 axImg.Position(2) 80 h1];
-%         else
-%             w1=axImg.Position(3);
-%             h1=w1/Rimg;            
-% %             hAxX.Position=[axImg.Position(1) 110+(axImg.Position(4)-h1)/2-l ...
-% %                 w1 80];
-% %             hAxY.Position=[axImg.Position(1)+axImg.Position(3) ...
-% %                 110+(axImg.Position(4)-h1)/2 l h1];            
-%         end
-%         
-%         % Match cut limits with the images limits
-% %         set(hAxX,'XLim',axImg.XLim,'XTick',axImg.XTick);
-% %         set(hAxY,'YLim',axImg.YLim,'YTick',axImg.YTick);
-%         
-%     
-%         
-%         % Move the colorbar
-% %         cBar.Position=[hAxX.Position(1) hAxY.Position(2)+hAxY.Position(4)+23 ...
-% %             hAxX.Position(3) 15]; 
-%     end
 
 %%
 
@@ -575,6 +411,35 @@ tbl_dispROI.Position(1:2)=[66 1];
     end
 %% Camera Functions
   
+
+% Grab the image camera if available
+function img=grabImage
+    img=[];
+    imageFrame = tlCameraSDK.GetPendingFrameOrNull;
+    if ~isempty(imageFrame)
+        imageData = imageFrame.ImageData.ImageData_monoOrBGR;
+        imageHeight = imageFrame.ImageData.Height_pixels;
+        imageWidth = imageFrame.ImageData.Width_pixels;   
+        img = reshape(uint16(imageData), [imageWidth, imageHeight]);  
+        img = img';
+        if isequal(sn,'10148')
+            img = imrotate(img,180);       
+        end
+        img=double(img);
+    end
+end
+
+function updateImage   
+    % Grab the image
+    img=grabImage;
+
+    % Exit if no image to be had
+    if isempty(img)
+        return
+    end
+    hImg.CData = img;    
+end
+
 %Get cameras
 function sns = getCameras
     try
