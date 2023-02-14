@@ -390,7 +390,7 @@ tImgDesc=text(4,4,'test','units','pixels','verticalalignment','bottom',...
        tImgDesc.String =str;
     end
 
-tblUpdate
+
 updateDescStr
 
 
@@ -403,7 +403,7 @@ cdata=imresize(imread('images/fullLim.png'),[15 15]);
 hbFullLim=uicontrol(hp,'style','pushbutton','Cdata',cdata,'Fontsize',10,...
     'Backgroundcolor','w','Position',[1 1 21 20],'Callback',@fullDispCB,...
     'ToolTipString',ttstr);
-
+keyboard
 ttstr='Snap display ROI to data ROI(s).';
 cdata=imresize(imread('images/snapLim.png'),[15 15]);
 hbSnapLim=uicontrol(hp,'style','pushbutton','Cdata',cdata,'Fontsize',10,...
