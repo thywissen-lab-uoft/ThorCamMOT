@@ -301,6 +301,23 @@ colormap(inferno);
 cBar=colorbar('fontsize',8,'units','pixels','location','northoutside');
 drawnow;
 
+
+tImgDesc=text(4,4,'test','units','pixels','verticalalignment','bottom',...
+    'color','r','fontweight','bold','fontsize',12);
+
+    function updateDescStr(counts)
+        
+        
+       str = [num2str(camera_settings.Gain) ' dB ' ...
+           num2str(camera_settings.ExposureTime)  ' \mus'];
+       if nargin == 1
+           str = [newline sprintf('%.4e',counts)];
+       end
+       tImgDesc.String =str;
+    end
+
+updateDescStr
+
 %%
 
 
@@ -423,6 +440,32 @@ tbl_dispROI.Position(1:2)=[66 1];
         drawnow;        
         delete(p1);delete(p2);                   % Delete markers
     end
+%%
+% Text label for color limit table on OD image
+climtext=uicontrol('parent',hp,'units','pixels','string','color',...
+    'fontsize',8,'backgroundcolor','w','style','text');
+climtext.Position(3:4)=climtext.Extent(3:4);
+climtext.Position(1:2)= [1 25];
+
+% Color limit table for OD image
+climtbl=uitable('parent',hp,'units','pixels','RowName',{},'ColumnName',{},...
+    'Data',[0 1],'ColumnWidth',{40,40},'ColumnEditable',[true true],...
+    'CellEditCallback',@climCB);
+climtbl.Position(3:4)=climtbl.Extent(3:4);
+climtbl.Position(1:2) = [30 25];
+
+% Callback for changing the color limits table
+    function climCB(src,evt)
+        try
+            axImg.CLim=climtbl.Data;
+        catch exception
+            warning('Bad OD color limits given. Using old value.');
+            src.Data(evt.Indices)=evt.PreviousData;
+        end
+    end
+
+axImg.CLim=climtbl.Data;
+
 %% Camera Functions
   
 
@@ -450,6 +493,9 @@ function updateImage
         return
     end
     hImg.CData = img;    
+    
+    updateDescStr(sum(sum(img)));
+    
 end
 
 %Get cameras
