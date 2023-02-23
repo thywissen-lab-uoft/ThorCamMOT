@@ -18,6 +18,7 @@ for kk=1:length(a.Children)
     end
 end
 
+historyDir=['C:' filesep 'ImageHistory'];
 
 %% Load Libraries to run the camera
 
@@ -29,6 +30,7 @@ dll_file=[dll_dir filesep 'Thorlabs.TSI.TLCamera.dll'];
 
 if exist(dll_file,'file') 
     cd(dll_dir);
+    addpath(dll_dir);addpath(genpath(dll_dir));
 
     % Check is the DLL's exist
     if ~exist(dll_file,'file')
@@ -56,8 +58,8 @@ end
 tlCamera = [];
 
 camera_settings = struct;
-camera_settings.ExposureTime = 1000;
-camera_settings.Gain_dB = 10;
+camera_settings.ExposureTime = 708;
+camera_settings.Gain_dB = 0;
 camera_settings.Gain = 0;
 
 camera_settings.PixelSize = 3.7; % size in um
@@ -72,7 +74,7 @@ Z=zeros(length(Y),length(X));   % Image to show
 
 %% Timer Objects
 
-timerLive=timer('Name','liveupdate','executionmode','fixedspacing',...
+mytimer=timer('Name','liveupdate','executionmode','fixedspacing',...
     'period',0.001,'TimerFcn',@liveCB);
 % Callback function for live update
     function liveCB(~,~)
@@ -81,9 +83,84 @@ timerLive=timer('Name','liveupdate','executionmode','fixedspacing',...
         updateImage;
     end
 
+    function trigCB(~,~,nImages) 
+        if tlCamera.NumberOfQueuedFrames
+            disp(tlCamera.NumberOfQueuedFrames)
+            img=grabImage;
+            disp('got an image')
+            hImg.CData=img;
+
+            data=processImages(img);
+            disp('     New Image!');
+            disp(['     Image     : ' data.Name]); 
+
+
+            % Update parameters table                            
+            [~,inds] = sort(lower(fieldnames(data.Params)));
+            params = orderfields(data.Params,inds);  
+                    
+            fnames=fieldnames(params);
+            for nn=1:length(fnames)
+                tbl_params.Data{nn,1}=fnames{nn};
+                val=data.Params.(fnames{nn});
+                if isa(val,'double')
+                    tbl_params.Data{nn,2}=num2str(val);
+                end
+
+                if isa(val,'struct')
+                   tbl_params.Data{nn,2}='[struct]'; 
+                end  
+            end
+                    
+            % Update flags table
+            fnames=fieldnames(data.Flags);
+            for nn=1:length(fnames)
+                tbl_flags.Data{nn,1}=fnames{nn};
+                val=data.Flags.(fnames{nn});
+                if isa(val,'double')
+                    tbl_flags.Data{nn,2}=num2str(val);
+                end                    
+                if isa(val,'struct')
+                   tbl_flags.Data{nn,2}='[struct]'; 
+                end                    
+            end        
+
+            saveData(data);
+
+            % Save image to folder
+            if hcSave.Value
+               saveData(data,tSaveDir.UserData); 
+            end                          
+
+        end                
+  end
+
+function saveData(data,saveDir)
+        if nargin==1
+           saveDir=historyDir;
+           filenames=dir([saveDir filesep '*.mat']);
+           filenames={filenames.name};
+           filenames=sort(filenames);
+
+           % Delete old images
+           if length(filenames)>200
+               f=[saveDir filesep filenames{1}];
+               delete(f);
+           end               
+        end
+        fname=[data.Name '.mat']; 
+        if ~exist(saveDir,'dir')
+           mkdir(saveDir);
+        end        
+        fname=fullfile(saveDir,fname);
+        fprintf('%s',[fname ' ...']);
+        save(fname,'data');
+        disp(' done'); 
+    end
+
 %% Graphics Options
 h = 110;
-
+h2=30;
 %% Figure Handle
 hF = figure('Name',guiname,'Color','w','units','pixels','toolbar','none',...
     'Tag','GUI','CloseRequestFcn',@closeGUI,...
@@ -108,7 +185,9 @@ function sizeChFcn(src,evt)
     hpRaw.Position(2) = hpC.Position(2);
     hpAnl.Position(2) = hpC.Position(2);
     hpFit.Position(4) = hF.Position(4) - hpC.Position(4);
-    hp.Position(3:4) = [hF.Position(3)-hp.Position(1) hF.Position(4)-h];
+    hpSave.Position(2) = hF.Position(4) - hpC.Position(4) - hpSave.Position(4);
+    hpSave.Position(3) = hF.Position(3)-hpFit.Position(1);
+    hp.Position(3:4) = [hF.Position(3)-hp.Position(1) hF.Position(4)-h-h2];
 %     resizePlots;
 end
 hF.SizeChangedFcn=@sizeChFcn;
@@ -153,6 +232,12 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
             hbclear.Enable='on';
             tbl_acq.Enable = 'on';
 
+            for t=1:length(bgAcq.Children)
+                bgAcq.Children(t).Enable='on';
+            end
+            bgAcq.Children(end).Value = 1;
+            mytimer.TimerFcn = @liveCB;
+
         catch ME
             warning(ME.message);
         end
@@ -169,6 +254,11 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
             hbstop.Enable='off';
             hbclear.Enable='off';
             tbl_acq.Enable = 'off';
+            for t=1:length(bgAcq.Children)
+                bgAcq.Children(t).Enable='off';
+            end
+            bgAcq.Children(end).Value = 1;
+            mytimer.TimerFcn = @liveCB;
 
         catch ME
             warning(ME.message)
@@ -190,7 +280,7 @@ hbDisconnect=uicontrol(hpC,'style','pushbutton','string','disconnect','units','p
     end
 %% Acquisition Panel
 hpAcq=uipanel(hF,'units','pixels','backgroundcolor','w',...
-    'Position',[hpC.Position(1)+hpC.Position(3) hF.Position(4)-h 280 h],'title','acquisition');
+    'Position',[hpC.Position(1)+hpC.Position(3) hF.Position(4)-h 330 h],'title','acquisition');
 
 % Start acquisitino button
 ttstr='Start the camera and image acquisition';
@@ -214,29 +304,72 @@ hbstop=uicontrol(hpAcq,'style','pushbutton','string','stop',...
 
 % Button group for deciding what the X/Y plots show
 bgAcq = uibuttongroup(hpAcq,'units','pixels','backgroundcolor','w',...
-    'BorderType','None');  
-bgAcq.Position(3:4)=[125 40];
-bgAcq.Position(1:2)=[50 h-(40+15)];
+    'BorderType','None','SelectionChangedFcn',@modeChangeCB);  
+bgAcq.Position(3:4)=[140 80];
+bgAcq.Position(1:2)=[50 h-(80+15)];
+
+    function modeChangeCB(src,evt)
+        if evt.NewValue.UserData == 0 % Go into live mode
+            try
+                tlCamera.Disarm;
+                tlCamera.OperationMode=Thorlabs.TSI.TLCameraInterfaces.OperationMode.SoftwareTriggered;
+                mytimer.TimerFcn = @liveCB;
+            catch ME
+                warning(ME.message);
+            end
+        else % Triggered mode
+            try
+                nImages = evt.NewValue.UserData;
+                tlCamera.Disarm;
+                tlCamera.OperationMode=Thorlabs.TSI.TLCameraInterfaces.OperationMode.HardwareTriggered;
+                mytimer.TimerFcn = @(src,evt) trigCB(src,evt,nImages);
+            catch ME
+                warning(ME.message);
+            end
+        end
+    end
+
+       
+        
+           
+    
     
 % Radio buttons for cuts vs sum
-uicontrol(bgAcq,'Style','radiobutton','String','live',...
-    'Position',[0 20 100 20],'units','pixels','backgroundcolor','w','Value',1);
-uicontrol(bgAcq,'Style','radiobutton','String','trigered',...
-    'Position',[0 0 100 20],'units','pixels','backgroundcolor','w');
-
+uicontrol(bgAcq,'Style','radiobutton','String','live','fontsize',7,...
+    'Position',[0 60 120 20],'units','pixels','backgroundcolor','w','Value',1,'enable','off',...
+    'UserData',0);
+uicontrol(bgAcq,'Style','radiobutton','String','trig (PWA)','fontsize',7,...
+    'Position',[0 40 120 20],'units','pixels','backgroundcolor','w','enable','off',...
+    'UserData',1);
+uicontrol(bgAcq,'Style','radiobutton','String','trig (PWA, PWOA)','fontsize',7,...
+    'Position',[0 20 120 20],'units','pixels','backgroundcolor','w','enable','off',...
+    'UserData',2);
+uicontrol(bgAcq,'Style','radiobutton','String','trig (PWA, PWOA, dark)','fontsize',7,...
+    'Position',[0 0 120 20],'units','pixels','backgroundcolor','w','enable','off',...
+    'UserData',3);
+bgAcq.Children
 % Start camera callback
     function startCamCB(~,~)
-        start(timerLive);
+        tlCamera.Arm;
+        start(mytimer);
         hbstart.Enable='off';
         hbstop.Enable='on';
+        for t=1:length(bgAcq.Children)
+            bgAcq.Children(t).Enable='off';
+        end
+
     end
 
 % Stop camera callback
     function stopCamCB(~,~)
-        stop(timerLive);
+        tlCamera.Disarm;
+
+        stop(mytimer);
         hbstart.Enable='on';
         hbstop.Enable='off';
-
+        for t=1:length(bgAcq.Children)
+            bgAcq.Children(t).Enable='on';
+        end
     end
 
 % Clear buffer calblack
@@ -252,7 +385,7 @@ tbl_acq.Data={...
     'gain', camera_settings.Gain;
     'exposure time (us)',camera_settings.ExposureTime};
 tbl_acq.Position(3:4) = tbl_acq.Extent(3:4);
-tbl_acq.Position(1:2)=[110 10];
+tbl_acq.Position(1:2)=[170 10];
 
 
  function chSet(tbl,data)
@@ -356,11 +489,60 @@ tbl_analysis(1)=uitable(tabs(3),'units','normalized','RowName',{},'ColumnName',{
     'fontsize',8,'ColumnWidth',{60 65 65},'columneditable',false(ones(1,3)),...
     'Position',[0 0 1 1]);
 
+%% Save Data
+
+hpSave=uipanel('parent',hF,'units','pixels','backgroundcolor','w');
+hpSave.Position(1:2)=[hpFit.Position(1)+hpFit.Position(3) hF.Position(4)-h-h2];
+hpSave.Position(3:4) = [hF.Position(3)-hpFit.Position(1) h2];
+
+
+% Auto Save check box
+ttstr=['Enable/Disable saving to external directory. Does ' ...
+    'not override saving to image history.'];
+hcSave=uicontrol(hpSave,'style','checkbox','string','save?','fontsize',8,...
+    'backgroundcolor','w','Position',[5 5 60 20],'callback',@saveCheck,...
+    'ToolTipString',ttstr);
+
+% Save checkbox callback
+    function saveCheck(src,~)
+        if src.Value
+            tSaveDir.Enable='on';
+            bBrowse.Enable='on';
+        else
+            tSaveDir.Enable='off';
+            bBrowse.Enable='off';
+        end
+    end
+
+% Browse button
+cdata=imresize(imread('images/browse.jpg'),[20 20]);
+bBrowse=uicontrol(hpSave,'style','pushbutton','CData',cdata,'callback',@browseCB,...
+    'enable','off','backgroundcolor','w','position',[60 5 size(cdata,[1 2])]);
+
+% String for current save directory
+tSaveDir=uicontrol(hpSave,'style','text','string','directory','fontsize',8,...
+    'backgroundcolor','w','units','pixels','horizontalalignment','left',...
+    'enable','off','UserData','','Position',[85 0 hF.Position(3)-290 22]);
+
+% Browse button callback
+    function browseCB(~,~)
+        str=getDayDir;
+        str=uigetdir(str);
+        if str
+            tSaveDir.UserData=str; % Full directory to save
+            str=strsplit(str,filesep);
+            str=[str{end-1} filesep str{end}];
+            tSaveDir.String=str; % display string
+        else
+            disp('no directory chosen!');
+        end
+    end
+
 %% Main Image
 
 hp=uipanel('parent',hF,'units','pixels','backgroundcolor','w');
 hp.Position(1:2)=[hpFit.Position(1)+hpFit.Position(3) 0];
-hp.Position(3:4) = [hF.Position(3)-hp.Position(1) hF.Position(4)-h];
+hp.Position(3:4) = [hF.Position(3)-hp.Position(1) hF.Position(4)-h-h2];
 
 
 axImg=axes('parent',hp,'UserData','OD');cla
@@ -393,7 +575,17 @@ tImgDesc=text(4,4,'test','units','pixels','verticalalignment','bottom',...
 
 updateDescStr
 
+%% Helper Functions
+function s3=getDayDir
+    t=now;
+    d=['Y:\Data'];
+    s1=datestr(t,'yyyy');s2=datestr(t,'yyyy.mm');s3=datestr(t,'mm.dd');
+    s1=[d filesep s1];s2=[s1 filesep s2];s3=[s2 filesep s3];
 
+    if ~exist(s1,'dir'); mkdir(s1); end
+    if ~exist(s2,'dir'); mkdir(s2); end
+    if ~exist(s3,'dir'); mkdir(s3); end
+end
 
 %%
 
@@ -542,7 +734,33 @@ climtbl.Position(1:2) = [30 25];
     end
 
 axImg.CLim=climtbl.Data;
+%% Image Processing
+    function data=processImages(imgs) 
+        tin = now;
+        data = struct;
+        data.Date=datevec(tin);
+        data.Name=['ThorCamImage_' datestr(tin,'yyyy-mm-dd_HH-MM-SS')];
+        data.X = 1:size(imgs,2);
+        data.Y = 1:size(imgs,1);
+        data.Images = imgs;
+        data.ExposureTime = camera_settings.ExposureTime;
 
+        data.Gain_dB = camera_settings.Gain_dB;
+        data.Gain = camera_settings.Gain;
+        data.PixelSize = camera_settings.PixelSize;
+        [data.Params,data.Units,data.Flags]=grabSeqeunceParams; 
+end
+
+%% Param
+function [vals,units,flags]=grabSeqeunceParams(src)
+    if nargin~=1
+    src = ['Y:\_communication\control2.mat'];
+    end
+    data=load(src);
+    vals = data.vals;
+    units=data.units;
+    flags=data.flags;
+end
 %% Camera Functions
   
 
@@ -616,7 +834,9 @@ end
         % Turn LED Off (it can add background signal)
         tlCamera.IsLEDOn=0;      
         % Arm the camera
-        tlCamera.Arm;       
+%         tlCamera.Arm;    
+        tlCamera.Disarm;
+
         disp('connected')
     catch ME
         disp('oh no')
