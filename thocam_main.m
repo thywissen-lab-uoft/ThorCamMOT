@@ -188,7 +188,10 @@ end
 [~, inds]=sort(x);
 atomdata=atomdata(inds);
 %% ROIS
-  ROI=[450 800 250 500];
+ROI=[550 800 500 750];
+
+
+ROI=[400 900 400 900];
 
 %% Aissgn the ROI
 
@@ -198,10 +201,7 @@ disp('Assigning ROI to data');
 disp(ROI);
 
 [atomdata.ROI]=deal(ROI);
-%% Calculate Data
-for kk=1:length(atomdata)
-    atomdata(kk).OD = atomdata(kk).Images;
-end
+
 %% Box Count
 % This section of code computes the box counts on all your data and ROIs.
 
@@ -258,4 +258,20 @@ end
 % end
 
 %% Animate Cloud
-% animateCloud(atomdata,xVar);
+if doAnimate
+    animateOpts = struct;
+    animateOpts.FigLabel = FigLabel;
+    animateOpts.saveDir = saveDir;
+    animateOpts.StartDelay = 1;
+    animateOpts.MidDelay = 0.5;
+    animateOpts.EndDelay = 1;
+    animateOpts.doAverage = 1;
+    animateOpts.doRotate = 0;
+    animateOpts.xUnit = thor_unit;
+%     animateOpts.CLim = 'auto';
+        animateOpts.CLim = [0 1024];
+
+    animateOpts.Order= 'ascend';
+
+    animateCloud(atomdata,thor_xVar,animateOpts);
+end

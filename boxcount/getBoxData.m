@@ -42,11 +42,11 @@ output = struct;
 
 output.FileNames    = {atomdata.Name}';
 
-if isfield(atomdata(1),'Flags')
-    output.Atom         = atomdata(1).Flags.image_atomtype;
-else
-    output.Atom         = NaN;
-end
+% if isfield(atomdata(1),'Flags')
+%     output.Atom         = atomdata(1).Flags.image_atomtype;
+% else
+%     output.Atom         = NaN;
+% end
 
 output.xVar         = xVar;
 output.X            = X;

@@ -67,6 +67,7 @@ camera_settings.TriggerMode = 1;
 camera_settings.QuantumEfficiency = 0.25; % size in um
 camera_settings.Magnification = 1;
 camera_settings.SolidAngle = .2;
+camera_settings.Images = [];
 
 X=1:1392;                       % X pixel vector
 Y=1:1024;                       % Y pixel vector
@@ -83,56 +84,69 @@ mytimer=timer('Name','liveupdate','executionmode','fixedspacing',...
         updateImage;
     end
 
-    function trigCB(~,~,nImages) 
-        if tlCamera.NumberOfQueuedFrames
-            disp(tlCamera.NumberOfQueuedFrames)
+    function trigCB(~,~,nImages)
+        if tlCamera.NumberOfQueuedFrames           
             img=grabImage;
-            disp('got an image')
-            hImg.CData=img;
-
-            data=processImages(img);
-            disp('     New Image!');
-            disp(['     Image     : ' data.Name]); 
-
-
-            % Update parameters table                            
-            [~,inds] = sort(lower(fieldnames(data.Params)));
-            params = orderfields(data.Params,inds);  
-                    
-            fnames=fieldnames(params);
-            for nn=1:length(fnames)
-                tbl_params.Data{nn,1}=fnames{nn};
-                val=data.Params.(fnames{nn});
-                if isa(val,'double')
-                    tbl_params.Data{nn,2}=num2str(val);
-                end
-
-                if isa(val,'struct')
-                   tbl_params.Data{nn,2}='[struct]'; 
-                end  
+            if isempty(camera_settings.Images)
+                camera_settings.Images = img;
+            else
+                camera_settings.Images(:,:,end+1)=img;  
             end
-                    
-            % Update flags table
-            fnames=fieldnames(data.Flags);
-            for nn=1:length(fnames)
-                tbl_flags.Data{nn,1}=fnames{nn};
-                val=data.Flags.(fnames{nn});
-                if isa(val,'double')
-                    tbl_flags.Data{nn,2}=num2str(val);
-                end                    
-                if isa(val,'struct')
-                   tbl_flags.Data{nn,2}='[struct]'; 
-                end                    
-            end        
+        end
 
-            saveData(data);
+        if size(camera_settings.Images,3)==nImages
+            newData(camera_settings.Images)
+            camera_settings.Images = [];
+        end   
+    end
 
-            % Save image to folder
-            if hcSave.Value
-               saveData(data,tSaveDir.UserData); 
-            end                          
 
-        end                
+    function newData(imgs)  
+
+        data=processImages(imgs);
+        hImg.CData=data.Data;
+
+        disp('     New Image!');
+        disp(['     Image     : ' data.Name]); 
+
+
+        % Update parameters table                            
+        [~,inds] = sort(lower(fieldnames(data.Params)));
+        params = orderfields(data.Params,inds);  
+                
+        fnames=fieldnames(params);
+        for nn=1:length(fnames)
+            tbl_params.Data{nn,1}=fnames{nn};
+            val=data.Params.(fnames{nn});
+            if isa(val,'double')
+                tbl_params.Data{nn,2}=num2str(val);
+            end
+
+            if isa(val,'struct')
+               tbl_params.Data{nn,2}='[struct]'; 
+            end  
+        end
+                
+        % Update flags table
+        fnames=fieldnames(data.Flags);
+        for nn=1:length(fnames)
+            tbl_flags.Data{nn,1}=fnames{nn};
+            val=data.Flags.(fnames{nn});
+            if isa(val,'double')
+                tbl_flags.Data{nn,2}=num2str(val);
+            end                    
+            if isa(val,'struct')
+               tbl_flags.Data{nn,2}='[struct]'; 
+            end                    
+        end        
+
+        saveData(data);
+
+        % Save image to folder
+        if hcSave.Value
+           saveData(data,tSaveDir.UserData); 
+        end                          
+
   end
 
 function saveData(data,saveDir)
@@ -744,6 +758,10 @@ axImg.CLim=climtbl.Data;
         data.Y = 1:size(imgs,1);
         data.Images = imgs;
         data.ExposureTime = camera_settings.ExposureTime;
+
+        if size(imgs,3)==2
+            data.Data = imgs(:,:,1)-imgs(:,:,2);
+        end
 
         data.Gain_dB = camera_settings.Gain_dB;
         data.Gain = camera_settings.Gain;

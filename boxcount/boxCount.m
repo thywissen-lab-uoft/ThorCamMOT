@@ -17,7 +17,7 @@ function atomdata=boxCount(atomdata,boxOpts)
             ROI=atomdata(kk).ROI(k,:);
             x=atomdata(kk).X(ROI(1):ROI(2));                 % X vector
             y=atomdata(kk).Y(ROI(3):ROI(4));                 % Y vector
-            z=double(atomdata(kk).OD(ROI(3):ROI(4),ROI(1):ROI(2)));
+            z=double(atomdata(kk).Data(ROI(3):ROI(4),ROI(1):ROI(2)));
             nbg=0;
             
             if boxOpts.doSubBG && isfield(boxOpts,'bgROI')
