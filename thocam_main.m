@@ -50,6 +50,13 @@ thor_autoUnit = 1;
 % If ixon_autoUnit=0, this will be used.
 thor_overrideUnit='G'; 
 
+%% Magnification and Pixel size
+
+% CS165MU Pixelsize is 3.45 um
+pixelsize0 = 3.45E-6; 
+
+% Magnification depends on which camera you are using
+mag = 1;
 
 %% Analysis Flags
 
