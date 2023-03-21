@@ -55,5 +55,12 @@ if doGaussFit
 
     [hF_size_gauss] = showSize(gauss_data,thor_xVar,gaussPopts);  
     if doSave;saveFigure(hF_size_gauss,'gauss_size',saveOpts);end
+    
+    
+    % Gaussian Temperature Analysis
+    if (isequal(thor_xVar,'tof') || isequal(thor_xVar,'tof_time') )&& size(gauss_data.Natoms,1)>3
+        [hF_temp,fitX,fitY]=computeGaussianTemperature(gauss_data,gaussPopts);
+        if doSave;saveFigure(hF_temp,'gauss_temp',saveOpts);end    
+    end      
         
 end
