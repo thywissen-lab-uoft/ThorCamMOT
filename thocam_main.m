@@ -80,7 +80,7 @@ doBoxCount    = 1;      % Box count analysis
 
 % Gaussian Fit
 % Fit to a gaussian distribution (thermal cloud)
-doGaussFit    = 0;      % Enable gauss fitting
+doGaussFit    = 1;      % Enable gauss fitting
 
 %% GDrive Settings
 GDrive_root = 'G:\My Drive\Lattice Shared\LabData';

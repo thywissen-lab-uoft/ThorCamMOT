@@ -42,7 +42,6 @@ output = struct;
 
 output.FileNames    = {atomdata.Name}';
 
-output.Ncounts=N;
 output.PixelSize    = PixelSize;
 output.xVar         = xVar;
 output.X            = X;
@@ -56,7 +55,7 @@ output.FitR2        = R2s;
 output.FitSSE       = SSEs;
 
 % Assign fit outputs
-output.Natoms       = Natoms;
+output.Ncounts       = N;
 output.Xc           = Xc;
 output.Yc           = Yc;
 output.Xs           = Xs;
