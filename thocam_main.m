@@ -217,18 +217,37 @@ if doBoxCount
     box_data = getBoxData(atomdata,thor_xVar);
     if doSave
         save([saveDir filesep 'box_data'],'box_data');
-    end  
-    
-        
-    if doSave && doUpload && exist(GDrive_root,'dir')
-        gDir = [fileparts(getImageDir2(datevec(now),GDrive_root)) filesep FigLabel];
-        gFile = [gDir filesep 'box_data'];        
-        if ~exist(gDir,'dir')
-           mkdir(gDir) 
-        end
-        save(gFile,'box_data');
-    end
+    end       
 end   
+
+%% Gaussian
+
+if doGaussFit   
+    disp(repmat('-',1,60));    
+    disp('Performing 2D gauss fit');
+    disp(repmat('-',1,60));    
+    % Iterate over all images (atomdata)
+    for kk=1:length(atomdata)
+        disp(repmat('-',1,60));   
+        disp(['(' num2str(kk) ') ' atomdata(kk).Name]);
+        % Iterate over all ROIs in an image
+        for nn=1:size(atomdata(kk).ROI,1)   % Iterate over all ROIs
+            sROI=atomdata(kk).ROI(nn,:);     % Grab the analysis ROI
+            Dx=sROI(1):sROI(2);               % X Vector
+            Dy=sROI(3):sROI(4);               % Y Vector
+            data=atomdata(kk).Data(Dy,Dx);    % Optical density   
+            
+            [fout,gof,output]=gaussFit2D(Dx,Dy,data);    % Perform the fit               
+            atomdata(kk).GaussFit{nn}=fout; % Assign the fit object       
+            atomdata(kk).GaussGOF{nn}=gof; % Assign the fit object  
+        end
+    end
+    gauss_data=getGaussData(atomdata,thor_xVar);  
+    if doSave
+        save([saveDir filesep 'gauss_data'],'gauss_data');
+    end    
+end 
+
 
 %% standard
 
