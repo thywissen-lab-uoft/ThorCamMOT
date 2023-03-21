@@ -264,25 +264,9 @@ if doStandard
     thorcam_analysis_standard;
 end
 
-%% Plot the total counts
-% hSize=showTotalCounts(atomdata,xVar,unit);
-% % ylim([0 1E7]);
-% saveFigure(atomdata, hSize, 'counts');
-
-%% Plot the widths
-% hSize=showSizes(atomdata,xVar);
-% saveFigure(atomdata, hSize, 'widths');
 %% Temperature Analysis
 % if isequal(xVar,'tof_time') && length(atomdata)>2
 %     [hTemp,fitX,fitY]=computeGaussianTemperature(atomdata);
-% end
-
-%% Plot Track Cloud Center
-
-% if isequal(xVar,'tof_time')
-%     trackCloudCenter(atomdata,xVar,'parabola')
-% else
-%     trackCloudCenter(atomdata,xVar);
 % end
 
 %% Animate Cloud
