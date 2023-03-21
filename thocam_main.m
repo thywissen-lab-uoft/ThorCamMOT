@@ -50,6 +50,8 @@ thor_autoUnit = 1;
 % If ixon_autoUnit=0, this will be used.
 thor_overrideUnit='G'; 
 
+atom_type = 0; % 0:Rb, 1: K
+
 %% Magnification and Pixel size
 
 % CS165MU Pixelsize is 3.45 um
@@ -146,7 +148,7 @@ for kk=1:length(files)
     data.Units.ExecutionDateStr = 'str';
 
     data.PixelSize = pixelsize0*mag;
-    
+    data.Atom = atom_type;
     atomdata(kk)=data;             
 end
 disp(' ');
@@ -264,10 +266,7 @@ if doStandard
     thorcam_analysis_standard;
 end
 
-%% Temperature Analysis
-% if isequal(xVar,'tof_time') && length(atomdata)>2
-%     [hTemp,fitX,fitY]=computeGaussianTemperature(atomdata);
-% end
+
 
 %% Animate Cloud
 if doAnimate

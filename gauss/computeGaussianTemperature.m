@@ -24,7 +24,7 @@ end
 %% Grab the Data
 params=[gauss_data.Params];
 
-TOFs=[params.tof];
+TOFs=[params.(gauss_data.xVar)];
 TOFs=TOFs*1E-3;
 
 PixelSize = gauss_data.PixelSize;
@@ -32,7 +32,7 @@ PixelSize = gauss_data.PixelSize;
 Xs = gauss_data.Xs*PixelSize;
 Ys = gauss_data.Ys*PixelSize;
            
-Natoms = gauss_data.Natoms;
+Ncounts = gauss_data.Ncounts;
 %% Performt the fit
 mLbl={};
 for nn=1:size(Xs,2)
@@ -103,7 +103,7 @@ clf;
 hF.Position(1)=0;
 hF.Position(2)=480;
 hF.Position(3)=800;
-hF.Position(4)=400;
+hF.Position(4)=300;
 hF.Resize='Off';
 set(gcf,'Color','w');
 
@@ -223,7 +223,7 @@ for nn=1:size(Xs,2)
     sz=sx;
 
     % Maximum number of atoms
-    N0=max(Natoms(:,nn));
+    N0=max(Ncounts(:,nn));
 
     % Peak 3D density
     n0=N0/(sqrt(2*pi*sx^2)*sqrt(2*pi*sy^2)*sqrt(2*pi*sz^2));     
@@ -240,18 +240,16 @@ for nn=1:size(Xs,2)
     if Tbar<1E-6
         data={'Tx,Ty,T',[num2str(round(Tx*1E9,2)) ' nK, ' num2str(round(Ty*1E9,2)) ' nK, ' num2str(round(Tbar*1E9,2)) ' nK'];
             [char(963) 'x,' char(963) 'y,' char(963) 'z,'],[num2str(round(sx*1E6)) ' ' char(956) 'm, ' num2str(round(sy*1E6)) ' ' char(956) 'm, ' num2str(round(sz*1E6)) ' ' char(956) 'm'];
-            ['max atoms'],[num2str(N0,'%.3e')];
+            ['max counts'],[num2str(N0,'%.3e')];
             [char(955) 'th'],[num2str(lambda*1E9), ' nm'];
-            ['max density'],[num2str(n0*1E-6,'%.3e'), ' atoms/cm^3'];
-            ['psd'],num2str(rhoCounts,'%.3e') 
+            ['max density'],[num2str(n0*1E-6,'%.3e'), ' counts/cm^3'];
             };
     else
         data={'Tx,Ty,T',[num2str(round(Tx*1E6,2)) ' ' char(956) 'K, ' num2str(round(Ty*1E6,2)) ' ' char(956) 'K, ' num2str(round(Tbar*1E6,2)) ' ' char(956) 'K'];
             [char(963) 'x,' char(963) 'y,' char(963) 'z,'],[num2str(round(sx*1E6)) ' ' char(956) 'm, ' num2str(round(sy*1E6)) ' ' char(956) 'm, ' num2str(round(sz*1E6)) ' ' char(956) 'm'];
-            ['max atoms'],[num2str(N0,'%.3e')];
+            ['max counts'],[num2str(N0,'%.3e')];
             [char(955) 'th'],[num2str(lambda*1E9), ' nm'];
-            ['max density'],[num2str(n0*1E-6,'%.3e'), ' atoms/cm^3'];
-            ['psd'],num2str(rhoCounts,'%.3e') 
+            ['max density'],[num2str(n0*1E-6,'%.3e'), ' counts/cm^3'];
             };
     end
     tz.Data=[tz.Data; data];

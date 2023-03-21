@@ -41,7 +41,7 @@ end
 output = struct;
 
 output.FileNames    = {atomdata.Name}';
-
+output.Atom         = atomdata(1).Atom;
 output.PixelSize    = PixelSize;
 output.xVar         = xVar;
 output.X            = X;
