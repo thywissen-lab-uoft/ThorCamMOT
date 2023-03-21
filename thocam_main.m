@@ -56,7 +56,7 @@ thor_overrideUnit='G';
 pixelsize0 = 3.45E-6; 
 
 % Magnification depends on which camera you are using
-mag = 1;
+mag = 18;
 
 %% Analysis Flags
 
@@ -144,6 +144,8 @@ for kk=1:length(files)
     data.Params.ExecutionDateStr = datestr(data.Params.ExecutionDate);    
     data.Units.ExecutionDate =  'days';
     data.Units.ExecutionDateStr = 'str';
+
+    data.PixelSize = pixelsize0*mag;
     
     atomdata(kk)=data;             
 end

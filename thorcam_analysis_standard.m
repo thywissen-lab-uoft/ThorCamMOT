@@ -33,7 +33,7 @@ if doGaussFit
     gaussPopts.NumberLorentzianFit=0;   % Fit atom number to lorentzian
     gaussPopts.CenterSineFit = 0;       % Fit sine fit to cloud center
     gaussPopts.CenterDecaySineFit = 0;  % Fit decaying sine to cloud center
-    gaussPopts.CenterParabolaFit = 0;
+    gaussPopts.CenterParabolaFit = 1;
     gaussPopts.CenterLinearFit = 0;     % Linear fit to cloud center
     gaussPopts.NumberExpOffsetFit = 0; % Exp decay fit with nonzero offset    
        
@@ -53,7 +53,7 @@ if doGaussFit
     if doSave;saveFigure(hF_center_gauss,'gauss_center',saveOpts);end
     if doSave;saveFigure(hF_center_gaussb,'gauss_center2',saveOpts);end
 
-    [hF_size_gauss] = showCenter(gauss_data,thor_xVar,gaussPopts);  
+    [hF_size_gauss] = showSize(gauss_data,thor_xVar,gaussPopts);  
     if doSave;saveFigure(hF_size_gauss,'gauss_size',saveOpts);end
         
 end
