@@ -67,6 +67,7 @@ doODProfile = 0;
 doStandard  = 1;
 
 doAnimate   = 1;
+doProfile = 1;
 doSave      = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -267,6 +268,45 @@ if doStandard
 end
 
 
+%% OD Profiles w or w/o Fits 
+profile_opts = struct;
+profile_opts.Style = 'cut'; 'sum';  % Cut or sum?
+% profile_opts.Style = 'sum';  % Cut or sum?
+
+profile_opts.FigLabel = FigLabel;
+
+clear hF_X;clear hF_Y;
+hF_X=[];hF_Y=[];
+
+if doProfile
+
+    for rNum=1:size(atomdata(1).ROI,1)
+        profile_opts.ROINum = rNum;
+
+        hF_Xs_rNum=showProfile(atomdata,'X',thor_xVar,profile_opts);
+
+        if doSave
+            for kk=1:length(hF_Xs_rNum) 
+                figure(hF_Xs_rNum(kk));
+                saveFigure(hF_Xs_rNum(kk),['OD_R' num2str(rNum) '_X' num2str(kk)],saveOpts);
+                pause(0.1);
+            end 
+        end
+
+        hF_Ys_rNum=showProfile(atomdata,'Y',pco_xVar,profile_opts);          
+    %   Save the figures (this can be slow)
+        if doSave        
+            for kk=1:length(hF_Ys_rNum)
+                figure(hF_Ys_rNum(kk));
+                saveFigure(hF_Ys_rNum(kk),['OD_R' num2str(rNum) '_Y' num2str(kk)],saveOpts);
+                pause(0.1);
+            end
+        end
+        hF_X=[hF_X; hF_Xs_rNum];
+        hF_Y=[hF_Y; hF_Ys_rNum];
+    end  
+ 
+end
 
 %% Animate Cloud
 if doAnimate
