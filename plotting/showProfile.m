@@ -56,7 +56,7 @@ for kk=1:(ceil(length(atomdata)/pMax))
 
         % Get the data
         x=atomdataSUB(ii).X;y=atomdataSUB(ii).Y;  
-        z=atomdataSUB(ii).OD; % N counts
+        z=atomdataSUB(ii).Data; % N counts
 
         % Get data over the selected ROI
         x=x(ROI(1):ROI(2));y=y(ROI(3):ROI(4));

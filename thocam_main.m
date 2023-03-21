@@ -70,6 +70,8 @@ doAnimate   = 1;
 doProfile = 1;
 doSave      = 1;
 
+doMask = 1;
+
 %%%%%%%%%%%%%%%%%%%%%%%%
 % Standard Analyses
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,6 +157,15 @@ end
 disp(' ');
 
 atomdata = matchParamsFlags(atomdata);
+
+%% Apply Mask
+
+if doMask
+    mask = load
+    for kk=1:length(atomdata)
+        atomdata(kk).Data.
+    end
+end
 
 %% X Variable and Units
 
@@ -293,7 +304,7 @@ if doProfile
             end 
         end
 
-        hF_Ys_rNum=showProfile(atomdata,'Y',pco_xVar,profile_opts);          
+        hF_Ys_rNum=showProfile(atomdata,'Y',thor_xVar,profile_opts);          
     %   Save the figures (this can be slow)
         if doSave        
             for kk=1:length(hF_Ys_rNum)
