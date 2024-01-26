@@ -90,7 +90,9 @@ sTblX=uitable('FontSize',8,'RowName',{},'ColumnName',{},...
     'ColumnEditable',[false false],'units','normalized');
 sTblX.ColumnWidth={100 60};
 sTblX.Position=pos;
-sTblX.Data={[char(0x0394) 'X (px)'],num2str(round(range(Xc(:,nn)),1))};
+
+r = max(Xc(:,nn)) - min(Xc(:,nn));
+sTblX.Data={[char(0x0394) 'X (px)'],num2str(round(r,1))};
 drawnow;
 
 
@@ -158,7 +160,8 @@ sTblY=uitable('FontSize',8,'RowName',{},'ColumnName',{},...
     'ColumnEditable',[false false],'units','normalized');
 sTblY.ColumnWidth={100 60};
 sTblY.Position=pos;
-sTblY.Data={[char(0x0394) 'Y (px)'],num2str(round(range(Yc(:,nn)),1))};
+ r = max(Yc(:,nn)) - min(Yc(:,nn));
+sTblY.Data={[char(0x0394) 'Y (px)'],num2str(round(r,1))};
 drawnow;
 
 %% Fits
@@ -330,7 +333,8 @@ if opts.CenterParabolaFit && length(xvals)>1
         tbl_dataY{6+6*(nn-1),2}=fit2(3)*PixelSize*1e6;   
 
         tbl_dataY{5+6*(nn-1),1}='<HTML> &Delta;Y (px)</HTML>';
-        tbl_dataY{5+6*(nn-1),2}=range(Yc(:,nn));
+        r = max(Yc(:,nn)) - min(Yc(:,nn));
+        tbl_dataY{5+6*(nn-1),2}=r;
         tbl_dataY{6+6*(nn-1),1}='<HTML> Mean(y) </HTML>';
         tbl_dataY{6+6*(nn-1),2}=mean(Yc(:,nn));
 
@@ -366,7 +370,8 @@ if opts.CenterLinearFit && length(xvals)>1
     tbl_data{4,2}=fit1(2)*PixelSize*1e6;
     
     tbl_data{5,1}='<HTML> &Delta;X (px)</HTML>';
-    tbl_data{5,2}=range(Xc(:,nn));
+    r = max(Xc(:,nn)) - min(Xc(:,nn));
+    tbl_data{5,2}=r;
     tbl_data{6,1}='<HTML> Mean(x) </HTML>';
     tbl_data{6,2}=mean(Xc(:,nn));
     
@@ -396,7 +401,8 @@ if opts.CenterLinearFit && length(xvals)>1
     tbl_data{4,2}=fit2(2)*PixelSize*1e6;
     
     tbl_data{5,1}='<HTML> &Delta;Y (px)</HTML>';
-    tbl_data{5,2}=range(Yc(:,nn));
+    r = max(Yc(:,nn)) - min(Yc(:,nn));
+    tbl_data{5,2}=r;
     tbl_data{6,1}='<HTML> Mean(y) </HTML>';
     tbl_data{6,2}=mean(Yc(:,nn));
     
@@ -494,8 +500,10 @@ end
 
 function fitResult=makeSineDecayFit(X,Y,W)
 
-% Guess the amplitude and offset
-gA=0.5*range(Y);
+% Guess the amplitude and offset\
+r = max(Y) - min(Y);
+
+gA=0.5*r;
 gD=(max(Y)+min(Y))*.5;
 
 % Guess the period

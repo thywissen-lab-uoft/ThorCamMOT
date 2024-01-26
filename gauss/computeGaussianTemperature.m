@@ -79,7 +79,7 @@ for nn=1:size(Xs,2)
     opt=fitoptions(myfit);
     opt.TolFun=1E-16;
     opt.Lower=[0 0];
-    opt.Upper=[5E-3 1E-3];    
+    opt.Upper=[5E-3 10E-3];    
       
     Tx0=(max(Xs(:,nn))^2-min(Xs(:,nn))^2)/(max(TOFs).^2)*(m/kB);
     set(opt,'StartPoint', [min(Xs(:,nn)), Tx0]);

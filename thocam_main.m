@@ -50,7 +50,7 @@ thor_autoUnit = 1;
 % If ixon_autoUnit=0, this will be used.
 thor_overrideUnit='G'; 
 
-atom_type = 0; % 0:Rb, 1: K
+atom_type = 1; % 0:Rb, 1: K
 
 %% Magnification and Pixel size
 
@@ -58,7 +58,8 @@ atom_type = 0; % 0:Rb, 1: K
 pixelsize0 = 3.45E-6; 
 
 % Magnification depends on which camera you are using
-mag = 18;
+% mag = 4.06;
+mag = 3;
 
 %% Analysis Flags
 
@@ -160,12 +161,16 @@ atomdata = matchParamsFlags(atomdata);
 
 %% Apply Mask
 
-if doMask
-    mask = load
-    for kk=1:length(atomdata)
-        atomdata(kk).Data.
-    end
-end
+% if doMask
+%     mask = load
+%     for kk=1:length(atomdata)
+%         atomdata(kk).Data.
+%     end
+% end
+
+%% Compute OD if absorption image
+[atomdata] = computeOD(atomdata);
+
 
 %% X Variable and Units
 
@@ -211,10 +216,12 @@ end
 [~, inds]=sort(x);
 atomdata=atomdata(inds);
 %% ROIS
-ROI=[550 800 500 750];
+% ROI=[550 800 500 750];
 
+% ROI = [1 1440 1 1080];
 
-ROI=[400 900 400 900];
+ROI = [100 1100 100 1000];
+% ROI=[400 900 400 900];
 
 %% Aissgn the ROI
 
@@ -330,8 +337,8 @@ if doAnimate
     animateOpts.doAverage = 1;
     animateOpts.doRotate = 0;
     animateOpts.xUnit = thor_unit;
-%     animateOpts.CLim = 'auto';
-        animateOpts.CLim = [0 1024];
+    animateOpts.CLim = 'auto';
+        animateOpts.CLim = [0 4];
 
     animateOpts.Order= 'ascend';
 

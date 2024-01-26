@@ -62,7 +62,7 @@ opt=fitoptions(myfit);
 opt.StartPoint=[N0 Xc Xs Yc Ys bg];
 opt.Lower=[N0/10 10 1 10 1 -.1];
 % opt.Upper=[1.5*N0 1.5*max(Dx) range(Dx) 1.5*max(Dy) range(Dy) 0.1];
-opt.Upper=[1.5*N0 1.5*max(Dx) range(Dx) 1.5*max(Dy) range(Dy) inf];
+opt.Upper=[1.5*N0 1.5*max(Dx) max(Dx)-min(Dx) 1.5*max(Dy) max(Dy)-min(Dy) inf];
 
 opt.Weights=[];
 

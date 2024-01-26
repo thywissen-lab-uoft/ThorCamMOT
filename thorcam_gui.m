@@ -17,7 +17,6 @@ for kk=1:length(a.Children)
        end
     end
 end
-
 historyDir=['C:' filesep 'ImageHistory'];
 
 %% Load Libraries to run the camera
@@ -62,10 +61,10 @@ camera_settings.ExposureTime = 708;
 camera_settings.Gain_dB = 0;
 camera_settings.Gain = 0;
 
-camera_settings.PixelSize = 3.7; % size in um
+camera_settings.PixelSize = 3.45; % size in um
 camera_settings.TriggerMode = 1;
-camera_settings.QuantumEfficiency = 0.25; % size in um
-camera_settings.Magnification = 1;
+camera_settings.QuantumEfficiency = 0.35; % size in um
+camera_settings.Magnification = 4.06;
 camera_settings.SolidAngle = .2;
 camera_settings.Images = [];
 
@@ -92,6 +91,8 @@ mytimer=timer('Name','liveupdate','executionmode','fixedspacing',...
             else
                 camera_settings.Images(:,:,end+1)=img;  
             end
+        else
+%              disp(['no image ' datestr(now)])
         end
 
         if size(camera_settings.Images,3)==nImages
@@ -102,19 +103,15 @@ mytimer=timer('Name','liveupdate','executionmode','fixedspacing',...
 
 
     function newData(imgs)  
-
         data=processImages(imgs);
         hImg.CData=data.Data;
-
         disp('     New Image!');
         disp(['     Image     : ' data.Name]); 
-
-
-        % Update parameters table                            
+        %Update parameters table                            
         [~,inds] = sort(lower(fieldnames(data.Params)));
-        params = orderfields(data.Params,inds);  
-                
+        params = orderfields(data.Params,inds);                  
         fnames=fieldnames(params);
+        
         for nn=1:length(fnames)
             tbl_params.Data{nn,1}=fnames{nn};
             val=data.Params.(fnames{nn});
@@ -139,7 +136,6 @@ mytimer=timer('Name','liveupdate','executionmode','fixedspacing',...
                tbl_flags.Data{nn,2}='[struct]'; 
             end                    
         end        
-
         saveData(data);
 
         % Save image to folder
@@ -341,6 +337,8 @@ bgAcq.Position(1:2)=[50 h-(80+15)];
                 warning(ME.message);
             end
         end
+        disp(tlCamera.OperationMode)
+
     end
 
        
@@ -350,17 +348,20 @@ bgAcq.Position(1:2)=[50 h-(80+15)];
     
 % Radio buttons for cuts vs sum
 uicontrol(bgAcq,'Style','radiobutton','String','live','fontsize',7,...
-    'Position',[0 60 120 20],'units','pixels','backgroundcolor','w','Value',1,'enable','off',...
+    'Position',[0 80 120 20],'units','pixels','backgroundcolor','w','Value',1,'enable','off',...
     'UserData',0);
 uicontrol(bgAcq,'Style','radiobutton','String','trig (PWA)','fontsize',7,...
-    'Position',[0 40 120 20],'units','pixels','backgroundcolor','w','enable','off',...
+    'Position',[0 60 120 20],'units','pixels','backgroundcolor','w','enable','off',...
     'UserData',1);
 uicontrol(bgAcq,'Style','radiobutton','String','trig (PWA, PWOA)','fontsize',7,...
-    'Position',[0 20 120 20],'units','pixels','backgroundcolor','w','enable','off',...
+    'Position',[0 40 120 20],'units','pixels','backgroundcolor','w','enable','off',...
     'UserData',2);
 uicontrol(bgAcq,'Style','radiobutton','String','trig (PWA, PWOA, dark)','fontsize',7,...
-    'Position',[0 0 120 20],'units','pixels','backgroundcolor','w','enable','off',...
+    'Position',[0 20 120 20],'units','pixels','backgroundcolor','w','enable','off',...
     'UserData',3);
+uicontrol(bgAcq,'Style','radiobutton','String','trig OD (PWA, PWOA, dark)','fontsize',7,...
+    'Position',[0 0 120 20],'units','pixels','backgroundcolor','w','enable','off',...
+    'UserData',4);
 bgAcq.Children
 % Start camera callback
     function startCamCB(~,~)
@@ -592,7 +593,7 @@ updateDescStr
 %% Helper Functions
 function s3=getDayDir
     t=now;
-    d=['Y:\Data'];
+    d=['C:\Data'];
     s1=datestr(t,'yyyy');s2=datestr(t,'yyyy.mm');s3=datestr(t,'mm.dd');
     s1=[d filesep s1];s2=[s1 filesep s2];s3=[s2 filesep s3];
 
@@ -767,17 +768,35 @@ axImg.CLim=climtbl.Data;
         data.Gain = camera_settings.Gain;
         data.PixelSize = camera_settings.PixelSize;
         [data.Params,data.Units,data.Flags]=grabSeqeunceParams; 
+        
 end
 
 %% Param
-function [vals,units,flags]=grabSeqeunceParams(src)
-    if nargin~=1
-    src = ['Y:\_communication\control2.mat'];
-    end
-    data=load(src);
-    vals = data.vals;
-    units=data.units;
-    flags=data.flags;
+
+ 
+
+function [vals,units,flags]=grabSeqeunceParams
+    
+    ctrlfile = 'C:\Users\E3\Documents\adwin_control.mat';
+    data=load(ctrlfile);
+    vals = struct;
+    vals.tof = data.tof;
+    vals.ExecutionDate = data.ExecutionDate;
+    units = struct;
+    units.tof = 'ms';
+    units.ExecutionDate = 'days';
+    flags = struct;
+    flags.hiall = 1;
+    
+
+%     if nargin~=1
+%     src = ['Y:\_communication\control2.mat'];
+%     end
+%     data=load(src);
+%     vals = data.vals;
+%     units=data.units;
+%     flags=data.flags;
+    
 end
 %% Camera Functions
   
@@ -813,7 +832,7 @@ function sns = getCameras
     try
         fprintf('Refreshing cameras ...')
         sns={};
-        SNs = tlCameraSDK.DiscoverAvailableCameras;
+        SNs = tlCameraSDK.DiscoverAvailableCameras;       
         for ii = 1:SNs.Count           
             camName=char(SNs.Item(ii-1));   
             sns{ii} = camName;
@@ -824,6 +843,8 @@ function sns = getCameras
         disp('uh oh')
         warning(ME.message)
         sns = {};
+                
+
     end
 end
 
